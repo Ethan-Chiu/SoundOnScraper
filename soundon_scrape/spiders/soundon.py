@@ -21,7 +21,7 @@ class MainPageSpider(scrapy.Spider):
         current_height = 0
         while True:
             await page.evaluate(f'window.scrollTo(0, {current_height + 100})')
-            await page.wait_for_timeout(2000)# Wait for content to load, adjust timeout as needed
+            await page.wait_for_timeout(2000) # Wait for content to load, adjust timeout as needed
 
             # Check the current scroll height
             current_height = await page.evaluate('window.scrollY')
@@ -38,7 +38,8 @@ class MainPageSpider(scrapy.Spider):
                 # Scroll right
                 await page.evaluate('(container) => container.scrollBy({ left: 1000, behavior: "smooth" })', container)
                 await page.wait_for_timeout(2000)# Wait for content to load, adjust timeout as needed
-                """ await page.wait_for_load_state('load')  # Wait for content to load, adjust timeout as needed """
+                # await page.wait_for_load_state('load')  # Wait for content to load, adjust timeout as needed
+
                 current_width += 1000
 
                 if current_width > scroll_width:
@@ -56,11 +57,7 @@ class MainPageSpider(scrapy.Spider):
     async def parse(self, response):
         page = response.meta["playwright_page"]
 
-        """ await self.scroll_to_bottom(page) """
-
         """ await page.screenshot(path="screenshot.png") """
-
-        """ await self.scroll_horizontally_in_containers(page, 'div.so-browse-channel > div:nth-child(4) > div:nth-child(1)') """
 
         await self.scroll_to_element(page, 'div.lazyload-placeholder')
          
@@ -70,11 +67,9 @@ class MainPageSpider(scrapy.Spider):
         channel_elements = await page.query_selector_all('a.so-browse-podcast')  # Adjust the selector as needed
         channel_urls = [await element.get_attribute('href') for element in channel_elements]
 
-        """ channel_urls = response.css('a::attr(href)').extract() """
         for url in channel_urls:
-            yield {"channel_url": url} 
-
-            """ yield response.follow(url, self.parse_channel) """
+            yield {"channel_url": f'https://player.soundon.fm{url}'} 
+            # yield response.follow(url, self.parse_channel)
 
     """ def parse_channel(self, response): """
     """     # Extract episode URLs """
