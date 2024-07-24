@@ -57,25 +57,21 @@ class MainPageSpider(scrapy.Spider):
     async def parse(self, response):
         page = response.meta["playwright_page"]
 
-        """ await page.screenshot(path="screenshot.png") """
-
         await self.scroll_to_element(page, 'div.lazyload-placeholder')
          
         await self.scroll_to_element(page, 'span.react-loading-skeleton')
 
         # Extract channel URLs
         channel_elements = await page.query_selector_all('a.so-browse-podcast')  # Adjust the selector as needed
-        channel_urls = [await element.get_attribute('href') for element in channel_elements]
+        for element in channel_elements:
+            url = await element.get_attribute('href')
 
-        for url in channel_urls:
-            yield {"channel_url": f'https://player.soundon.fm{url}'} 
+            title_handle = await element.query_selector('h5.so-browse-podcast__title')
+            title_text = await page.evaluate('(element) => element.textContent', title_handle)
+
+            yield {"channel_url": f'https://player.soundon.fm{url}', "title": title_text} 
+
             # yield response.follow(url, self.parse_channel)
-
-    """ def parse_channel(self, response): """
-    """     # Extract episode URLs """
-    """     episode_urls = response.css('a::attr(href)').re(r'/p/\d+/episodes/\d+') """
-    """     for url in episode_urls: """
-    """         yield {'episode_url': response.urljoin(url)}     """
 
     async def errback(self, failure):
         page = failure.request.meta["playwright_page"]
